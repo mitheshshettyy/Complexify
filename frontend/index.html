@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complexify - AI Code Complexity Analyzer</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Complexify</h1>
+            <p class="subtitle">AI-Powered Code Complexity Analyzer</p>
+        </header>
+
+        <main>
+            <div class="input-section">
+                <textarea id="code" placeholder="Paste your Python code here..."></textarea>
+                <div class="actions">
+                    <button onclick="analyze()" id="analyzeBtn">Analyze Code</button>
+                </div>
+            </div>
+
+            <div id="loading" class="hidden">
+                <div class="spinner"></div>
+                <p>Analyzing code complexity...</p>
+            </div>
+
+            <div id="results" class="hidden">
+                <div class="grid">
+                    <div class="card">
+                        <h3>Time Complexity</h3>
+                        <p id="time" class="value">--</p>
+                    </div>
+                    <div class="card">
+                        <h3>Space Complexity</h3>
+                        <p id="space" class="value">--</p>
+                    </div>
+                    <div class="card">
+                        <h3>Cyclomatic Complexity</h3>
+                        <p id="cyclo" class="value">--</p>
+                    </div>
+                    <div class="card">
+                        <h3>Readability Score</h3>
+                        <p id="readability" class="value">--</p>
+                    </div>
+                </div>
+
+                <div class="card full-width">
+                    <h3>Optimization Suggestions</h3>
+                    <p id="suggestions" class="suggestion-text">--</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
