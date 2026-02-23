@@ -4,11 +4,9 @@ from backend.ml.preprocess import preprocess_code
 from backend.ml.models import (
     vectorizer,
     time_model,
-    space_model,
     cyclo_model,
     read_model,
-    time_enc,
-    space_enc
+    time_enc
 )
 
 app = FastAPI(
@@ -50,15 +48,25 @@ def root():
 # ---------- Analyze Endpoint ----------
 @app.post("/analyze", response_model=AnalysisResponse)
 def analyze_code(data: CodeInput):
+    import scipy.sparse as sp
+    from backend.ml.features import extract_ast_features
     # preprocess input code
     clean_code = preprocess_code(data.code)
     vector = vectorizer.transform([clean_code])
+    
+    # AST features
+    ast_feats = extract_ast_features(data.code)
+    X_num = [[ast_feats["loop_depth"], ast_feats["recursion_count"], ast_feats["control_flow_count"]]]
+    
+    # Combine features
+    X_combined = sp.hstack([vector, X_num])
 
     # predictions
-    time_pred = time_enc.inverse_transform(time_model.predict(vector))[0]
-    space_pred = space_enc.inverse_transform(space_model.predict(vector))[0]
-    cyclo_pred = float(round(cyclo_model.predict(vector)[0], 2))
-    read_pred = float(round(read_model.predict(vector)[0], 2))
+    time_pred = time_enc.inverse_transform(time_model.predict(X_combined))[0]
+    # space_pred = space_enc.inverse_transform(space_model.predict(vector))[0] # Space model removed
+    space_pred = "Unknown" 
+    cyclo_pred = float(round(cyclo_model.predict(X_combined)[0], 2))
+    read_pred = float(round(read_model.predict(X_combined)[0], 2))
 
     return {
         "time_complexity": time_pred,
