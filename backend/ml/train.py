@@ -9,10 +9,13 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from pathlib import Path
+import os
+from dotenv import load_dotenv
 
 # load dataset
 BASE_DIR = Path(__file__).resolve().parents[2]
-DATASET_PATH = BASE_DIR / "dataset" / "python_data.jsonl"
+load_dotenv(BASE_DIR / ".env")
+DATASET_PATH = Path(os.getenv("DATASET_PATH", str(BASE_DIR / "dataset" / "python_data.jsonl")))
 
 print("Loading dataset...")
 df = pd.read_json(DATASET_PATH, lines=True)

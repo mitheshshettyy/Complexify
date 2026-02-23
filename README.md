@@ -1,69 +1,112 @@
 # Complexify - Code Complexity Analyzer
 
-A web-based tool for analyzing code complexity metrics including time complexity, cyclomatic complexity, and readability scores.
+Complexify is a FastAPI + static frontend app that predicts:
+- Time complexity
+- Cyclomatic complexity
+- Readability score
+- Space complexity (currently configured as `Unknown`)
 
-## Project Structure
+## 1. Project Structure
 
 ```text
-complexify/
+Complexify/
 |- backend/
-|  |- main.py              # FastAPI server
+|  |- config.py               # Reads .env settings
+|  |- main.py                 # FastAPI API (/ and /analyze)
 |  |- ml/
-|  |  |- train.py          # Training pipeline
-|  |  |- preprocess.py     # NLP preprocessing
-|  |  |- models.py         # Model loading
-|  |  |- features.py       # AST feature extraction
+|  |  |- features.py
+|  |  |- preprocess.py
+|  |  |- models.py
+|  |  |- train.py
 |  |- vectorizer.pkl
 |  |- time_model.pkl
 |  |- cyclo_model.pkl
 |  |- read_model.pkl
 |  |- time_encoder.pkl
-|- dataset/
-|  |- python_data.jsonl
 |- frontend/
 |  |- index.html
 |  |- style.css
 |  |- script.js
+|- dataset/
+|  |- python_data.jsonl
+|- .env.example
 |- requirements.txt
 ```
 
-## Installation
+## 2. Environment Configuration
 
-1. Create a virtual environment:
-```bash
-python -m venv venv
-venv\Scripts\activate
+1. Copy template:
+```powershell
+copy .env.example .env
 ```
 
-2. Install dependencies:
-```bash
+2. Edit `.env` values as needed.
+
+Recommended keys in `.env`:
+```env
+DATASET_PATH=dataset/python_data.jsonl
+```
+
+Important:
+- `.env` is ignored in git.
+- `.env.example` is safe to commit.
+
+## 3. Setup
+
+```powershell
+cd d:\P\Complexify
+python -m venv venv
+.\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
 
-## Running the Application
+## 4. Run Backend
 
-1. Start the backend server:
-```bash
-python -m uvicorn backend.main:app --reload
+```powershell
+python -m uvicorn backend.main:app --reload --port 8000
 ```
 
-2. Open the frontend:
-- Open `frontend/index.html` in your browser.
+Health check:
+- Open `http://127.0.0.1:8000`
+- Expected: `{"status":"Complexify API is running"}`
 
-## Features
+## 5. Run Frontend
 
-- Code Analysis: Paste code snippets for instant complexity analysis.
-- Multiple Metrics: Analyze time complexity, cyclomatic complexity, and readability.
-- Space Complexity: Currently returns `Unknown`.
-- ML-Based Predictions: Uses trained machine learning models.
+```powershell
+cd frontend
+start index.html
+```
 
-## Development
+Frontend calls: `http://127.0.0.1:8000/analyze`
 
-To train models:
-```bash
+## 6. API
+
+### `GET /`
+Returns health status.
+
+### `POST /analyze`
+Request body:
+```json
+{ "code": "def f(n):\n    return n" }
+```
+
+Response fields:
+- `time_complexity`
+- `space_complexity`
+- `cyclomatic_complexity`
+- `readability_score`
+- `optimization_suggestions`
+
+## 7. Retrain Models
+
+The training script reads dataset path from `.env` key `DATASET_PATH` (defaults to `dataset/python_data.jsonl`).
+
+```powershell
 python -m backend.ml.train
 ```
 
-## License
+## 8. Public GitHub Safety Checklist
 
-MIT License
+- Keep `.env` private (already git-ignored).
+- Commit only `.env.example`.
+- Do not commit any secrets/tokens/API keys in code or README.
