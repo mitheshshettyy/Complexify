@@ -1,10 +1,7 @@
 import re
-import nltk
-from nltk.corpus import stopwords
+from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 
-nltk.download("stopwords")
-
-STOP_WORDS = set(stopwords.words("english"))
+STOP_WORDS = set(ENGLISH_STOP_WORDS)
 
 def preprocess_code(code: str) -> str:
     # remove comments
