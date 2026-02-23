@@ -104,9 +104,3 @@ The training script reads dataset path from `.env` key `DATASET_PATH` (defaults 
 ```powershell
 python -m backend.ml.train
 ```
-
-## 8. Public GitHub Safety Checklist
-
-- Keep `.env` private (already git-ignored).
-- Commit only `.env.example`.
-- Do not commit any secrets/tokens/API keys in code or README.
