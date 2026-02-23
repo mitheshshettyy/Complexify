@@ -56,14 +56,48 @@ def analyze_code(data: CodeInput):
     
     # AST features
     ast_feats = extract_ast_features(data.code)
-    X_num = [[ast_feats["loop_depth"], ast_feats["recursion_count"], ast_feats["control_flow_count"]]]
+    import numpy as np
+    X_num = np.array([[
+        ast_feats["num_for_loops"],
+        ast_feats["num_while_loops"],
+        ast_feats["num_if_statements"],
+        ast_feats["num_functions"],
+        ast_feats["num_assignments"],
+        ast_feats["num_binary_ops"],
+        ast_feats["num_returns"],
+        ast_feats["loop_depth"],
+        ast_feats["recursion_count"],
+        ast_feats["control_flow_count"],
+        len(clean_code)
+    ]]) * 10.0
     
     # Combine features
     X_combined = sp.hstack([vector, X_num])
 
     # predictions
     time_pred = time_enc.inverse_transform(time_model.predict(X_combined))[0]
-    # space_pred = space_enc.inverse_transform(space_model.predict(vector))[0] # Space model removed
+    
+    # Heuristic override for obvious control-flow structures (handles ML noise)
+    loop_depth = ast_feats["loop_depth"]
+    recursion_count = ast_feats["recursion_count"]
+
+    if recursion_count == 0:
+        # Non-recursive code should not exceed loop nesting order for common cases.
+        if loop_depth >= 3:
+            time_pred = "cubic"
+        elif loop_depth == 2:
+            time_pred = "quadratic"
+        elif loop_depth == 1 and time_pred in ["quadratic", "cubic", "np"]:
+            time_pred = "linear"
+        elif loop_depth == 0:
+            time_pred = "constant"
+    else:
+        # Multiple self-calls in recursion (e.g., naive Fibonacci) grows exponentially.
+        if recursion_count >= 2 and loop_depth == 0:
+            time_pred = "exponential"
+        elif time_pred == "constant":
+            time_pred = "linear"
+
     space_pred = "Unknown" 
     cyclo_pred = float(round(cyclo_model.predict(X_combined)[0], 2))
     read_pred = float(round(read_model.predict(X_combined)[0], 2))

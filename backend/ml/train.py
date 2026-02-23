@@ -45,22 +45,28 @@ df["readability"] = metrics[1]
 
 print("Extracting AST features...")
 ast_features = df["code"].apply(lambda x: pd.Series(extract_ast_features(x)))
-df["loop_depth"] = ast_features["loop_depth"]
-df["recursion_count"] = ast_features["recursion_count"]
-df["control_flow_count"] = ast_features["control_flow_count"]
+ast_columns = [
+    "num_for_loops", "num_while_loops", "num_if_statements", 
+    "num_functions", "num_assignments", "num_binary_ops", 
+    "num_returns", "loop_depth", "recursion_count", "control_flow_count"
+]
+for col in ast_columns:
+    df[col] = ast_features[col]
 
 # preprocess code
 print("Preprocessing code...")
 df["clean_code"] = df["code"].apply(preprocess_code)
+df["clean_code_length"] = df["clean_code"].apply(len)
 
 # vectorization
 print("Vectorizing...")
-vectorizer = TfidfVectorizer(max_features=5000)
+vectorizer = TfidfVectorizer(max_features=300)
 X_text = vectorizer.fit_transform(df["clean_code"])
 
 print("Combining features...")
-# AST numerical features
-X_num = df[["loop_depth", "recursion_count", "control_flow_count"]].values
+# AST numerical features + length
+num_cols = ast_columns + ["clean_code_length"]
+X_num = df[num_cols].values * 10.0 # Boost structural features heavily
 X_combined = sp.hstack([X_text, X_num])
 
 # encode labels
