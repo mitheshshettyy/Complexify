@@ -33,6 +33,7 @@ class AnalysisResponse(BaseModel):
     time_complexity: str
     space_complexity: str
     readability_score: float
+    optimization_suggestions: str
 
 
 @app.get("/")
@@ -49,6 +50,7 @@ def analyze_code(data: CodeInput):
         calculate_readability_score,
         detect_space_complexity,
         extract_ast_features,
+        generate_optimization_suggestions,
     )
 
     clean_code = preprocess_code(data.code)
@@ -94,9 +96,11 @@ def analyze_code(data: CodeInput):
 
     read_pred = calculate_readability_score(data.code)
     space_pred = detect_space_complexity(data.code)
+    suggestions = generate_optimization_suggestions(data.code)
 
     return {
         "time_complexity": time_pred,
         "space_complexity": space_pred,
         "readability_score": read_pred,
+        "optimization_suggestions": suggestions,
     }

@@ -4,6 +4,7 @@ Complexify is a FastAPI + static frontend app that predicts:
 - Time complexity
 - Readability score
 - Space complexity
+- Code suggestions
 
 ## 1. Project Structure
 
@@ -92,6 +93,7 @@ Response fields:
 - `time_complexity`
 - `space_complexity`
 - `readability_score`
+- `optimization_suggestions`
 
 ## 7. Retrain Models
 

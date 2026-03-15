@@ -240,6 +240,25 @@ def calculate_readability_score(code: str) -> float:
     return round(normalized, 2)
 
 
+def generate_optimization_suggestions(code: str) -> str:
+    features = extract_ast_features(code)
+    suggestions = []
+
+    if features["loop_depth"] >= 2:
+        suggestions.append("Reduce nested loops where possible or reuse precomputed results to lower repeated work.")
+    if features["recursion_count"] > 0:
+        suggestions.append("If recursion grows quickly, consider memoization or an iterative approach to reduce overhead.")
+    if features["num_for_loops"] + features["num_while_loops"] > 0 and "append(" in code:
+        suggestions.append("If you are building a result collection, a comprehension may simplify the loop and improve clarity.")
+    if features["num_if_statements"] >= 3:
+        suggestions.append("Consider extracting complex branching into smaller helper functions for easier maintenance.")
+
+    if not suggestions:
+        return "Code structure looks reasonable; optimize only after profiling identifies a real bottleneck."
+
+    return " ".join(suggestions)
+
+
 def _halstead_volume(tree: ast.AST) -> float:
     visitor = _HalsteadVisitor()
     visitor.visit(tree)

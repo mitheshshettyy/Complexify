@@ -32,6 +32,7 @@ async function analyze() {
         document.getElementById("time").innerText = data.time_complexity;
         document.getElementById("space").innerText = data.space_complexity;
         document.getElementById("readability").innerText = data.readability_score;
+        document.getElementById("suggestions").innerText = data.optimization_suggestions;
 
         resultsSection.classList.remove("hidden");
     } catch (err) {
