@@ -1,12 +1,39 @@
 # Complexify - Code Complexity Analyzer
 
-Complexify is a FastAPI + static frontend app that predicts:
-- Time complexity
-- Readability score
-- Space complexity
-- Code suggestions
+Complexify is a lightweight full-stack application that analyzes Python code snippets and returns a compact quality report through a simple web interface.
 
-## 1. Project Structure
+It uses a **FastAPI backend** and a **static frontend** to predict:
+- ⏱️ **Time complexity**
+- 💾 **Space complexity**
+- 📝 **Readability score**
+- 💡 **Optimization suggestions**
+
+The goal of the project is to help users quickly understand how efficient, maintainable, and improvable a Python snippet may be.
+
+---
+
+## 🛠️ Tech Stack
+
+### Backend
+- FastAPI
+- Python
+- Scikit-learn
+- AST
+- Pickle
+
+### Frontend
+- HTML
+- CSS
+- JavaScript
+
+### Data / ML
+- TF-IDF vectorization
+- Trained ML models
+- JSONL dataset
+
+---
+
+## 1. 📁 Project Structure
 
 ```text
 Complexify/
