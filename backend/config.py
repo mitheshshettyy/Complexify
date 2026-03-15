@@ -25,11 +25,6 @@ class Settings:
         "AI-powered Code Complexity Analyzer using ML + NLP",
     )
     cors_origins: List[str] = field(default_factory=lambda: _parse_origins(os.getenv("CORS_ORIGINS", "*")))
-    space_complexity_label: str = os.getenv("SPACE_COMPLEXITY_LABEL", "Unknown")
-    optimization_suggestions: str = os.getenv(
-        "OPTIMIZATION_SUGGESTIONS",
-        "Reduce nested loops, avoid redundant computations, and prefer efficient data structures.",
-    )
 
 
 settings = Settings()

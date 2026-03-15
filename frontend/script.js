@@ -33,7 +33,6 @@ async function analyze() {
         document.getElementById("space").innerText = data.space_complexity;
         document.getElementById("cyclo").innerText = data.cyclomatic_complexity;
         document.getElementById("readability").innerText = data.readability_score;
-        document.getElementById("suggestions").innerText = data.optimization_suggestions;
 
         resultsSection.classList.remove("hidden");
     } catch (err) {
