@@ -4,8 +4,6 @@ from pydantic import BaseModel
 
 from backend.config import settings
 from backend.ml.models import (
-    cyclo_model,
-    read_model,
     time_enc,
     time_model,
     vectorizer,
@@ -34,7 +32,6 @@ class CodeInput(BaseModel):
 class AnalysisResponse(BaseModel):
     time_complexity: str
     space_complexity: str
-    cyclomatic_complexity: float
     readability_score: float
 
 
@@ -48,7 +45,11 @@ def analyze_code(data: CodeInput):
     import numpy as np
     import scipy.sparse as sp
 
-    from backend.ml.features import detect_space_complexity, extract_ast_features
+    from backend.ml.features import (
+        calculate_readability_score,
+        detect_space_complexity,
+        extract_ast_features,
+    )
 
     clean_code = preprocess_code(data.code)
     vector = vectorizer.transform([clean_code])
@@ -91,13 +92,11 @@ def analyze_code(data: CodeInput):
         elif time_pred == "constant":
             time_pred = "linear"
 
-    cyclo_pred = float(round(cyclo_model.predict(X_combined)[0], 2))
-    read_pred = float(round(read_model.predict(X_combined)[0], 2))
+    read_pred = calculate_readability_score(data.code)
     space_pred = detect_space_complexity(data.code)
 
     return {
         "time_complexity": time_pred,
         "space_complexity": space_pred,
-        "cyclomatic_complexity": cyclo_pred,
         "readability_score": read_pred,
     }

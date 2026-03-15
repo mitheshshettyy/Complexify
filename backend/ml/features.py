@@ -1,4 +1,7 @@
 import ast
+import io
+import math
+import tokenize
 
 def extract_ast_features(code: str) -> dict:
     try:
@@ -209,3 +212,176 @@ def _argument_halves_input(arg: ast.AST, params: list[str]) -> bool:
     if isinstance(arg, ast.BinOp) and isinstance(arg.left, ast.Name) and arg.left.id in params:
         return isinstance(arg.op, (ast.FloorDiv, ast.RShift))
     return False
+
+
+def calculate_readability_score(code: str) -> float:
+    try:
+        tree = ast.parse(code)
+    except SyntaxError:
+        return 0.0
+
+    halstead_volume = _halstead_volume(tree)
+    sloc = _source_lines_of_code(code)
+    comment_ratio = _comment_ratio(code)
+    branch_count = _count_branch_points(tree)
+
+    volume_term = math.log(max(halstead_volume, 1.0))
+    sloc_term = math.log(max(sloc, 1))
+    comment_bonus = 50.0 * math.sin(math.sqrt(2.4 * math.radians(comment_ratio)))
+
+    maintainability = (
+        171.0
+        - 5.2 * volume_term
+        - 0.35 * branch_count
+        - 16.2 * sloc_term
+        + comment_bonus
+    )
+    normalized = max(0.0, min(100.0, maintainability * 100.0 / 171.0))
+    return round(normalized, 2)
+
+
+def _halstead_volume(tree: ast.AST) -> float:
+    visitor = _HalsteadVisitor()
+    visitor.visit(tree)
+    vocabulary = len(visitor.operators) + len(visitor.operands)
+    length = visitor.total_operators + visitor.total_operands
+    if vocabulary == 0 or length == 0:
+        return 0.0
+    return float(length * math.log2(vocabulary))
+
+
+class _HalsteadVisitor(ast.NodeVisitor):
+    def __init__(self) -> None:
+        self.operators = set()
+        self.operands = set()
+        self.total_operators = 0
+        self.total_operands = 0
+
+    def visit_Name(self, node: ast.Name) -> None:
+        self._add_operand(node.id)
+
+    def visit_Constant(self, node: ast.Constant) -> None:
+        self._add_operand(repr(node.value))
+
+    def visit_Attribute(self, node: ast.Attribute) -> None:
+        self._add_operand(node.attr)
+        self.generic_visit(node)
+
+    def visit_Call(self, node: ast.Call) -> None:
+        self._add_operator("call")
+        self.generic_visit(node)
+
+    def visit_Assign(self, node: ast.Assign) -> None:
+        self._add_operator("assign")
+        self.generic_visit(node)
+
+    def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
+        self._add_operator("ann_assign")
+        self.generic_visit(node)
+
+    def visit_AugAssign(self, node: ast.AugAssign) -> None:
+        self._add_operator(type(node.op).__name__)
+        self.generic_visit(node)
+
+    def visit_Return(self, node: ast.Return) -> None:
+        self._add_operator("return")
+        self.generic_visit(node)
+
+    def visit_BoolOp(self, node: ast.BoolOp) -> None:
+        self._add_operator(type(node.op).__name__)
+        self.generic_visit(node)
+
+    def visit_BinOp(self, node: ast.BinOp) -> None:
+        self._add_operator(type(node.op).__name__)
+        self.generic_visit(node)
+
+    def visit_UnaryOp(self, node: ast.UnaryOp) -> None:
+        self._add_operator(type(node.op).__name__)
+        self.generic_visit(node)
+
+    def visit_Compare(self, node: ast.Compare) -> None:
+        for op in node.ops:
+            self._add_operator(type(op).__name__)
+        self.generic_visit(node)
+
+    def visit_If(self, node: ast.If) -> None:
+        self._add_operator("if")
+        self.generic_visit(node)
+
+    def visit_IfExp(self, node: ast.IfExp) -> None:
+        self._add_operator("ifexp")
+        self.generic_visit(node)
+
+    def visit_For(self, node: ast.For) -> None:
+        self._add_operator("for")
+        self.generic_visit(node)
+
+    def visit_AsyncFor(self, node: ast.AsyncFor) -> None:
+        self._add_operator("async_for")
+        self.generic_visit(node)
+
+    def visit_While(self, node: ast.While) -> None:
+        self._add_operator("while")
+        self.generic_visit(node)
+
+    def visit_comprehension(self, node: ast.comprehension) -> None:
+        self._add_operator("comprehension")
+        self.generic_visit(node)
+
+    def _add_operator(self, value: str) -> None:
+        self.operators.add(value)
+        self.total_operators += 1
+
+    def _add_operand(self, value: str) -> None:
+        self.operands.add(value)
+        self.total_operands += 1
+
+
+def _count_branch_points(tree: ast.AST) -> int:
+    count = 0
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.If, ast.IfExp, ast.For, ast.AsyncFor, ast.While, ast.Assert)):
+            count += 1
+        elif isinstance(node, ast.Try):
+            count += len(node.handlers)
+        elif isinstance(node, ast.BoolOp):
+            count += max(0, len(node.values) - 1)
+        elif isinstance(node, ast.comprehension):
+            count += 1 + len(node.ifs)
+        elif isinstance(node, ast.Match):
+            count += sum(1 for case in node.cases if not _is_wildcard_case(case))
+    return count
+
+
+def _is_wildcard_case(case: ast.match_case) -> bool:
+    return isinstance(case.pattern, ast.MatchAs) and case.pattern.pattern is None and case.pattern.name is None
+
+
+def _source_lines_of_code(code: str) -> int:
+    return max(1, sum(1 for line in code.splitlines() if line.strip()))
+
+
+def _comment_ratio(code: str) -> float:
+    comment_lines = set()
+    source_lines = set()
+
+    try:
+        for token in tokenize.generate_tokens(io.StringIO(code).readline):
+            if token.type == tokenize.COMMENT:
+                comment_lines.add(token.start[0])
+            elif token.type not in {
+                tokenize.ENCODING,
+                tokenize.ENDMARKER,
+                tokenize.NL,
+                tokenize.NEWLINE,
+                tokenize.INDENT,
+                tokenize.DEDENT,
+            }:
+                source_lines.add(token.start[0])
+    except tokenize.TokenError:
+        return 0.0
+
+    total_lines = len(source_lines | comment_lines)
+    if total_lines == 0:
+        return 0.0
+    return (len(comment_lines) / total_lines) * 100.0

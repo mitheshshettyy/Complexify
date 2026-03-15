@@ -31,7 +31,6 @@ async function analyze() {
         // Update UI with results
         document.getElementById("time").innerText = data.time_complexity;
         document.getElementById("space").innerText = data.space_complexity;
-        document.getElementById("cyclo").innerText = data.cyclomatic_complexity;
         document.getElementById("readability").innerText = data.readability_score;
 
         resultsSection.classList.remove("hidden");

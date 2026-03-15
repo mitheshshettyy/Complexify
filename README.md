@@ -2,7 +2,6 @@
 
 Complexify is a FastAPI + static frontend app that predicts:
 - Time complexity
-- Cyclomatic complexity
 - Readability score
 - Space complexity
 
@@ -20,7 +19,6 @@ Complexify/
 |  |  |- train.py
 |  |- vectorizer.pkl
 |  |- time_model.pkl
-|  |- cyclo_model.pkl
 |  |- read_model.pkl
 |  |- time_encoder.pkl
 |- frontend/
@@ -93,7 +91,6 @@ Request body:
 Response fields:
 - `time_complexity`
 - `space_complexity`
-- `cyclomatic_complexity`
 - `readability_score`
 
 ## 7. Retrain Models
